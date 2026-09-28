@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مولّدي — حسابات ودردشة</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+  body { background: linear-gradient(135deg, #e8f0fe 0%, #f0e8ff 100%); min-height: 100vh; padding: 20px; color: #2c3e50; }
+  .container { max-width: 900px; margin: 0 auto; }
+  header { text-align: center; padding: 30px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 24px; color: white; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(102,126,234,0.3); }
+  header h1 { font-size: 28px; margin-bottom: 8px; }
+  header p { opacity: 0.9; font-size: 14px; }
+  .card { background: white; border-radius: 20px; padding: 24px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+  .card h2 { font-size: 18px; margin-bottom: 16px; color: #5a67d8; display: flex; align-items: center; gap: 8px; }
+  label { display: block; font-size: 13px; color: #718096; margin-bottom: 6px; font-weight: 600; }
+  input[type="text"] { width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 15px; transition: 0.2s; background: #f8fafc; }
+  input[type="text"]:focus { outline: none; border-color: #667eea; background: white; }
+  .btn { padding: 12px 20px; border: none; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; transition: 0.2s; font-family: inherit; }
+  .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; width: 100%; margin-top: 12px; }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102,126,234,0.4); }
+  .result-box { background: #f8fafc; border: 2px dashed #cbd5e0; border-radius: 14px; padding: 14px 16px; margin-top: 14px; display: flex; justify-content: space-between; align-items: center; gap: 10px; animation: fadeIn 0.4s; }
+  .result-box .value { font-family: 'Courier New', monospace; font-size: 15px; font-weight: 600; color: #2d3748; word-break: break-all; }
+  .result-box .label-sm { font-size: 11px; color: #a0aec0; margin-bottom: 2px; }
+  .btn-copy { background: #5a67d8; color: white; padding: 8px 14px; font-size: 12px; flex-shrink: 0; }
+  .btn-copy:hover { background: #4c51bf; }
+  .btn-copy.copied { background: #48bb78; }
+  .btn-row { display: flex; gap: 10px; margin-top: 14px; }
+  .btn-row .btn { flex: 1; }
+  .btn-save { background: #48bb78; color: white; }
+  .btn-save:hover { background: #38a169; }
+  .btn-new { background: #ed8936; color: white; }
+  .btn-new:hover { background: #dd6b20; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+  .chat-box { height: 280px; overflow-y: auto; background: #f8fafc; border-radius: 14px; padding: 16px; margin-bottom: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .msg { max-width: 80%; padding: 10px 14px; border-radius: 14px; font-size: 14px; line-height: 1.5; animation: fadeIn 0.3s; white-space: pre-wrap; }
+  .msg.user { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; align-self: flex-start; border-bottom-right-radius: 4px; }
+  .msg.bot { background: white; color: #2d3748; align-self: flex-end; border: 1px solid #e2e8f0; border-bottom-left-radius: 4px; }
+  .chat-input-row { display: flex; gap: 8px; }
+  .chat-input-row input { flex: 1; }
+  .btn-send { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 20px; flex-shrink: 0; }
+  .chat-input-row .btn-send:hover { transform: scale(1.05); }
+  .saved-item { background: #f8fafc; border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; border-left: 4px solid #667eea; }
+  .saved-item .info { flex: 1; overflow: hidden; }
+  .saved-item .info div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .saved-item .name { font-weight: 700; color: #5a67d8; margin-bottom: 3px; }
+  .btn-del { background: #fc8181; color: white; padding: 6px 10px; font-size: 11px; flex-shrink: 0; }
+  .btn-del:hover { background: #f56565; }
+  .empty { text-align: center; color: #a0aec0; font-size: 13px; padding: 20px; }
+  .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #2d3748; color: white; padding: 12px 24px; border-radius: 30px; font-size: 14px; opacity: 0; transition: 0.3s; pointer-events: none; z-index: 1000; }
+  .toast.show { opacity: 1; bottom: 50px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>🔐 مولّدي</h1>
+    <p>مولّد بريد إلكتروني وكلمات مرور + دردشة ذكية</p>
+  </header>
+
+  <div class="card">
+    <h2>✨ مولّد الحسابات</h2>
+    <label>اكتب الاسم (عربي أو إنجليزي)</label>
+    <input type="text" id="nameInput" placeholder="مثال: محمد، سارة، Ahmed...">
+    <button class="btn btn-primary" onclick="generate()">🎲 توليد بريد وكلمة مرور</button>
+    <div id="output" style="display:none;">
+      <div class="result-box">
+        <div>
+          <div class="label-sm">📧 البريد الإلكتروني</div>
+          <div class="value" id="emailOut">-</div>
+        </div>
+        <button class="btn btn-copy" onclick="copyText('emailOut', this)">نسخ</button>
+      </div>
+      <div class="result-box">
+        <div>
+          <div class="label-sm">🔑 كلمة المرور</div>
+          <div class="value" id="passOut">-</div>
+        </div>
+        <button class="btn btn-copy" onclick="copyText('passOut', this)">نسخ</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-save" onclick="saveAccount()">💾 حفظ</button>
+        <button class="btn btn-new" onclick="generate()">🔄 جديد</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>💬 الدردشة الذكية</h2>
+    <div class="chat-box" id="chatBox">
+      <div class="msg bot">أهلاً! 👋 اكتب لي مثلاً:
+لمة مرور قوية"';
+  }• "سو لي حساب لسارة"
+• "أبغى إيميل لـ ahmed"
+• "كلمة مرور قوية"</div>
+    </div>
+    <div class="chat-input-row">
+      <input type="text" id="chatInput" placeholder="اكتب رسالتك..." onkeypress="if(event.key==='Enter') sendChat()">
+      <button class="btn btn-send" onclick="sendChat()">➤</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>💾 الحسابات المحفوظة</h2>
+    <div id="savedList">
+      <div class="empty">لا توجد حسابات محفوظة بعد</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">تم النسخ ✅</div>
+
+<script>
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+function copyText(id, btn) {
+  const text = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✓ تم';
+    btn.classList.add('copied');
+    toast('تم النسخ ✅');
+    setTimeout(() => {
+      btn.textContent = 'نسخ';
+      btn.classList.remove('copied');
+    }, 1500);
+  });
+}
+
+const arToEn = {
+  'ا':'a','أ':'a','إ':'a','آ':'a','ب':'b','ت':'t','ث':'th','ج':'j','ح':'h','خ':'kh',
+  'د':'d','ذ':'dh','ر':'r','ز':'z','س':'s','ش':'sh','ص':'s','ض':'d','ط':'t','ظ':'z',
+  'ع':'a','غ':'gh','ف':'f','ق':'q','ك':'k','ل':'l','م':'m','ن':'n','ه':'h','و':'w',
+  'ي':'y','ى':'a','ة':'a','ء':'','ئ':'y','ؤ':'w',' ':''
+};
+
+function transliterate(name) {
+  name = name.trim().toLowerCase();
+  if (/[a-z]/.test(name)) {
+    return name.replace(/[^a-z0-9]/g, '');
+  }
+  let result = '';
+  for (let ch of name) {
+    result += arToEn[ch] !== undefined ? arToEn[ch] : ch;
+  }
+  return result || 'user';
+}
+
+const domains = ['gmail.com', 'outlook.com', 'yahoo.com', 'icloud.com', 'hotmail.com'];
+
+function generateEmail(name) {
+  const base = transliterate(name);
+  const year = [2024, 2025, 2026][Math.floor(Math.random()*3)];
+  const num = Math.floor(Math.random()*99) + 1;
+  const patterns = [
+    base + num,
+    base + '.' + num,
+    base + year,
+    base + '_' + num,
+    base + year + num
+  ];
+  const user = patterns[Math.floor(Math.random()*patterns.length)];
+  const domain = domains[Math.floor(Math.random()*domains.length)];
+  return user + '@' + domain;
+}
+
+function generatePassword() {
+  const upper = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  const lower = 'abcdefghijkmnpqrstuvwxyz';
+  const nums = '23456789';
+  const syms = '!@#$%&*?';
+  const all = upper + lower + nums + syms;
+  let pass = '';
+  pass += upper[Math.floor(Math.random()*upper.length)];
+  pass += lower[Math.floor(Math.random()*lower.length)];
+  pass += nums[Math.floor(Math.random()*nums.length)];
+  pass += syms[Math.floor(Math.random()*syms.length)];
+  for (let i = 0; i < 8; i++) {
+    pass += all[Math.floor(Math.random()*all.length)];
+  }
+  return pass.split('').sort(() => Math.random()-0.5).join('');
+}
+
+let currentAccount = null;
+
+function generate() {
+  const name = document.getElementById('nameInput').value.trim();
+  if (!name) { toast('⚠️ اكتب الاسم أولاً'); return; }
+  const email = generateEmail(name);
+  const pass = generatePassword();
+  document.getElementById('emailOut').textContent = email;
+  document.getElementById('passOut').textContent = pass;
+  document.getElementById('output').style.display = 'block';
+  currentAccount = { name, email, pass, date: new Date().toLocaleDateString('ar') };
+}
+
+function getSaved() {
+  return JSON.parse(localStorage.getItem('savedAccounts') || '[]');
+}
+
+function saveAccount() {
+  if (!currentAccount) { toast('⚠️ ولّد حساب أولاً'); return; }
+  const saved = getSaved();
+  saved.unshift(currentAccount);
+  localStorage.setItem('savedAccounts', JSON.stringify(saved));
+  toast('تم الحفظ 💾');
+  renderSaved();
+}
+
+function deleteAccount(index) {
+  const saved = getSaved();
+  saved.splice(index, 1);
+  localStorage.setItem('savedAccounts', JSON.stringify(saved));
+  renderSaved();
+  toast('تم الحذف 🗑️');
+}
+
+function renderSaved() {
+  const list = document.getElementById('savedList');
+  const saved = getSaved();
+  if (saved.length === 0) {
+    list.innerHTML = '<div class="empty">لا توجد حسابات محفوظة بعد</div>';
+    return;
+  }
+  list.innerHTML = saved.map((acc, i) => `
+    <div class="saved-item">
+      <div class="info">
+        <div class="name">👤 ${acc.name}</div>
+        <div>📧 ${acc.email}</div>
+        <div>🔑 ${acc.pass}</div>
+      </div>
+      <button class="btn btn-del" onclick="deleteAccount(${i})">حذف</button>
+    </div>
+  `).join('');
+}
+
+function addMsg(text, who) {
+  const box = document.getElementById('chatBox');
+  const div = document.createElement('div');
+  div.className = 'msg ' + who;
+  div.textContent = text;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+function sendChat() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text) return;
+  addMsg(text, 'user');
+  input.value = '';
+  setTimeout(() => {
+    const reply = botReply(text);
+    addMsg(reply, 'bot');
+  }, 400);
+}
+
+function botReply(text) {
+  const t = text.toLowerCase();
+  const nameMatch = text.match(/(?:ل|لـ|لاسم|باسم)\s+([\u0600-\u06FFa-zA-Z]+)/);
+  const name = nameMatch ? nameMatch[1] : null;
+  if ((t.includes('حساب') || t.includes('سو') || t.includes('سوي') || t.includes('انشئ') || t.includes('أنشئ')) && name) {
+    const email = generateEmail(name);
+    const pass = generatePassword();
+    return 'تم! حساب لـ "' + name + '":\n📧 ' + email + '\n🔑 ' + pass;
+  }
+  if ((t.includes('ايميل') || t.includes('إيميل') || t.includes('بريد') || t.includes('email')) && name) {
+    return '📧 بريد مقترح لـ "' + name + '":\n' + generateEmail(name);
+  }
+  if (t.includes('باسورد') || t.includes('كلمة مرور') || t.includes('كلمه مرور') || t.includes('password')) {
+    return '🔑 كلمة مرور قوية:\n' + generatePassword();
+  }
+  if (t.includes('مرحبا') || t.includes('هلا') || t.includes('سلام') || t.includes('اهلا') || t.includes('أهلا')) {
+    return 'أهلاً بك! 👋 اكتب:\n• "سو لي حساب لسارة"\n• "أبغى إيميل لـ ahmed"\n• "
+ك
+  if (t.includes('شكرا') || t.includes('شكراً')) {
+    return 'العفو! 😊 أي خدمة ثانية؟';
+  }
+  if (name) {
+    const email = generateEmail(name);
+    const pass = generatePassword();
+    return 'حساب لـ "' + name + '":\n📧 ' + email + '\n🔑 ' + pass;
+  }
+  return 'ما فهمت 🤔 جرب تكتب:\n"سو لي حساب لمحمد"\n"إيميل لسارة"\n"كلمة مرور"';
+}
+
+renderSaved();
+document.getElementById('nameInput').addEventListener('keypress', e => {
+  if (e.key === 'Enter') generate();
+});
+</script>
+
+</body>
+</html>
